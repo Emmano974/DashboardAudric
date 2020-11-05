@@ -1,10 +1,12 @@
 import React, { useState, Fragment, useEffect } from 'react'
-import { Button, Dialog, DialogContent, DialogTitle, Divider, Grid, IconButton, makeStyles, Paper, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, TextField, Typography } from '@material-ui/core';
+import { Button, Dialog, DialogContent, DialogTitle, Divider, Grid, IconButton, makeStyles, Paper, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, TextField, Tooltip, Typography } from '@material-ui/core';
 import DeleteIcon from '@material-ui/icons/Delete';
 import AddIcon from '@material-ui/icons/Add';
 import CloseIcon from '@material-ui/icons/Close';
 import KeyboardArrowDownIcon from '@material-ui/icons/KeyboardArrowDown';
 import KeyboardArrowUpIcon from '@material-ui/icons/KeyboardArrowUp';
+import ReceiptIcon from '@material-ui/icons/Receipt';
+import EditIcon from '@material-ui/icons/Edit';
 import axios from 'axios'
 
 const useStyles = makeStyles((theme) => ({
@@ -39,19 +41,21 @@ export default function Devis () {
 
     const [devis, setDevis] = useState({
         form : {
-                date:'',
-                name:'',
-                phone:'',
-                type:'',
-                location:'',
-                email:'',
-                quantity:'',
-                price:'',
-                total:"", 
-                timeremain:'',
+                date:null,
+                name:null,
+                phone:null,
+                type:null,
+                location:null,
+                email:null,
+                quantity:null,
+                price:null,
+                total:null, 
+                timeremain:null,
                 newDevis:[],
+                update: false
         }})
 
+    const [openU, setOpenU] = useState(false)
     const [openF, setOpenF] = useState(false)
     const [openL, setOpenL] = useState(false)
 
@@ -84,6 +88,10 @@ export default function Devis () {
         setOpenL(!openL)
     }
 
+    const setUpdat = () => {
+        setOpenU(!openU)
+    }
+
     /*Fonction récupération de chaque input*/
     const handleChange = (event) => {
         setDevis({ 
@@ -97,22 +105,17 @@ export default function Devis () {
   
 
     /*Fonction Supression de chaque ligne*/
-    const handleDelete = (id) => {
+    const handleDelete = (id) => {  
         axios.delete('/api/devis/' + id)
             .then(res => {  
                 console.log(res)
+                console.log(res.data)
+                const deletion = devis.form.newDevis.filter(details =>  details._id !== id)
                 setDevis({
                     form : {
-                        newDevis : devis.form.newDevis.filter(details =>  details.id !== id)
-                            }})
-                getNewDevis()
-                // } : {
-                //     return(
-                //         newDevis : devis.form.newDevis.filter(details =>  details.id !== id)}})
-                //     )
-            })
-                
-                // })
+                        newDevis : deletion
+                    }})        
+                })
     console.log(id)
     }
 
@@ -127,13 +130,10 @@ export default function Devis () {
             return datemonth
             
         }
-        const months = add_months(dt, 3);
+        const months = add_months(dt, 4);
         console.log(months)
 
         const {date ,name,phone,type,location,email,quantity,price} = devis.form
-        
-        
-        
         const data = {
             date:date,
             name: name,
@@ -141,56 +141,29 @@ export default function Devis () {
             type:type,
             location:location,
             email:email,
-            quantity:parseInt(quantity) ,
-            price:parseInt(price),
-            total:parseInt(price * quantity), 
+            quantity:quantity ,
+            price:price,
+            total:price * quantity, 
             timeremain:months,
         }
 
-        // const {id, date, name, phone, type, location, email, quantity, price, total} = devis.form;
-
-        // setDevis({ form : {
-        //      id:Math.random(), 
-        //      date:'', 
-        //      name:'', 
-        //      phone:'', 
-        //      type:'', 
-        //      location:'', 
-        //      email:'', 
-        //      quantity:'', 
-        //      price:'', 
-        //      total:'', 
-        //      timeremain:'', 
-        //      newDevis:[...devis.form.newDevis, {id, date, name,  phone, type, location, email, quantity, price, total:devis.form.price * devis.form.quantity, timeremain: months}]
-        //  } })
-
          axios({ 
-            url: 'http://localhost:8000/api/devis',
+            url: '/api/devis',
             method:'POST',
-            data:{
-                date:devis.form.date,
-                name: devis.form.name,
-                phone:devis.form.phone,
-                type:devis.form.type,
-                location:devis.form.location,
-                email:devis.form.email,
-                quantity:devis.form.quantity ,
-                price:devis.form.price,
-                total:devis.form.price * devis.form.quantity, 
-                timeremain:months,
-        } 
+            data: data
             })
             .then(() => {
                 console.log("data devis")
+                handleReset()
                 getNewDevis()
+                
             })
             .catch(() => {
                 console.log("No Data")
             })
     }
 
-
-    const handleReset = () => {
+  const handleReset = () => {
         setDevis({form: {
             date:'',
             name:'',
@@ -201,13 +174,15 @@ export default function Devis () {
             quantity:'',
             price:'',
             total:'',  
+            timeremain:''
         }})
     }
+    
 
 console.log(devis.form.newDevis)
 
     /*Affichage du rendu des devis*/
-    const renderTable = () => {
+    const renderTable = (newDevis) => {
         return (
             <Fragment>
             <TableContainer component={Paper}>
@@ -254,11 +229,11 @@ console.log(devis.form.newDevis)
                     <TableCell><b>Prix</b></TableCell>
                     <TableCell><b>Total</b></TableCell>
                     <TableCell><b>Temps</b></TableCell>
-                    <TableCell colSpan='2' align='center'><b>Actions</b></TableCell>
+                    <TableCell colSpan='3' align='center'><b>Actions</b></TableCell>
                 </TableRow>
             </TableHead>
             <TableBody>
-                {devis.form.newDevis.map(detail => (
+                {newDevis.map(detail => (
                     <TableRow key={detail._id}>
                         <TableCell>{detail._id}</TableCell>
                         <TableCell>{detail.name}</TableCell>
@@ -273,11 +248,15 @@ console.log(devis.form.newDevis)
                         <TableCell>{detail.timeremain}</TableCell>
                           {/* Bouton permettant de supprimer la ligne d'un devis */}
                         <TableCell>
-                            <Button type='button' onClick={handleDelete.bind(this, detail._id)}><DeleteIcon/></Button>
+                            <Button type='button' onClick={handleDelete.bind(this, detail._id)}><Tooltip title='Supprimer'><DeleteIcon/></Tooltip></Button>
                         </TableCell>  
                         <TableCell>
-                            <Button type='button' onClick={handleUpdate.bind(this, detail._id)}>U</Button>
-                        </TableCell>                                   
+                            <Button type='button' onClick={setUpdat.bind(this, detail)}><Tooltip title='Modifier'><EditIcon/></Tooltip></Button>
+                        </TableCell>
+                        <TableCell>
+                            <Button type='button' onClick={facture.bind(this, detail)}><Tooltip title='Facturer'><ReceiptIcon/></Tooltip></Button>
+                        </TableCell>  
+                        {renderUpdate(detail)}                                   
                     </TableRow>))}
                 </TableBody>
                 </Table>
@@ -290,9 +269,9 @@ console.log(devis.form.newDevis)
     /*Affichage du formulaire de devis */
     const renderDialog = (classes) => {
         return (
-            <Dialog fullScreen onClose={setForm} aria-labelledby="simple-dialog-title" open={openF} >
-                <DialogTitle id="customized-dialog-title" onClose={setForm} className={classes.formDevis}>DEVIS</DialogTitle>
-                    <IconButton aria-label="close" onClick={setForm} className={classes.closeButton}>
+            <Dialog fullScreen onClose={setForm} open={openF} >
+                <DialogTitle onClose={setForm} className={classes.formDevis}>DEVIS</DialogTitle>
+                    <IconButton onClick={setForm} className={classes.closeButton}>
                         <CloseIcon />
                     </IconButton>
                     <Divider/>
@@ -300,7 +279,6 @@ console.log(devis.form.newDevis)
                             <form onSubmit={handleSubmit} name="form">
                             <Grid container spacing={1}>  
                                 <Grid item xs={12}>
-                                    <Typography><b>Entreprise</b></Typography>
                                     <Typography>Audric Lamy</Typography>
                                     <Typography>7 rue des Jacinthes</Typography>
                                     <Typography>97490 Sainte-Clotilde</Typography>
@@ -313,16 +291,16 @@ console.log(devis.form.newDevis)
                             <Grid container alignItems='flex-end' direction='column'> 
                                 <Typography><b>Client</b></Typography>
                                     <Grid item xs>
-                                        <TextField label="Nom" required type="text" name="name" value={devis.form.name} onChange={handleChange}/>
+                                        <TextField label="Nom" type="text" name="name" value={devis.form.name} onChange={handleChange}/>
                                     </Grid>
                                     <Grid item xs>
-                                        <TextField required type="text" name="phone" label="Numéro de téléphone" value={devis.form.phone} onChange={handleChange}/>
+                                        <TextField type="text" name="phone" label="Numéro de téléphone" value={devis.form.phone} onChange={handleChange}/>
                                     </Grid> 
                                     <Grid item xs>
-                                        <TextField required type="text" name="location" label="Adresse" value={devis.form.location} onChange={handleChange}/>
+                                        <TextField type="text" name="location" label="Adresse" value={devis.form.location} onChange={handleChange}/>
                                     </Grid>
                                     <Grid item xs>
-                                        <TextField required type="email" name="email"  label="Email"value={devis.form.email} onChange={handleChange}/>
+                                        <TextField type="text" name="email"  label="Email"value={devis.form.email} onChange={handleChange}/>
                                     </Grid>
                                 </Grid>
                                     <Grid container>
@@ -381,9 +359,115 @@ console.log(devis.form.newDevis)
                                           </TableContainer>
                                           </Grid>
                                           </Grid>
+                                         <Grid container justify='center' alignContent='center' alignItems='center' textAlign='center' >
+                                             <Grid item xs={12}>
+                                                 <Button variant='outlined' color='secondary' type='submit'>Ajouter</Button>
+                                             </Grid>
+                                         </Grid>
+                                        </form>
+                                        </DialogContent>
+                                    </Dialog>
+            )
+        }        
+        
+    const renderUpdate = (detail) => {
+
+        console.log(detail.date, detail.name, detail.phone, detail.type, detail.location, detail.email, detail.quantity, detail.price, detail.total, detail.timeremain)
+        return (
+            <Dialog fullScreen onClose={setUpdat} open={openU} >
+                <DialogTitle onClose={setUpdat} className={classes.formDevis}>DEVIS</DialogTitle>
+                    <IconButton onClick={setUpdat} className={classes.closeButton}>
+                        <CloseIcon />
+                    </IconButton>
+                    <Divider/>
+                        <DialogContent className={classes.contentFormDevis}>
+                            <form name="form">
+                            <Grid container spacing={1}>  
+                                <Grid item xs={12}>
+                                    <Typography><b>Entreprise</b></Typography>
+                                    <Typography>Audric Lamy</Typography>
+                                    <Typography>7 rue des Jacinthes</Typography>
+                                    <Typography>97490 Sainte-Clotilde</Typography>
+                                    <Typography>Audric.Lamy@supinfo.com</Typography>
+                                    <Typography>0692123456</Typography>
+                                    <Typography>Fait le : </Typography>
+                                    <TextField required type="date" name="date" value={detail.date}/>
+                                </Grid>
+                            </Grid>                 
+                            <Grid container alignItems='flex-end' direction='column'> 
+                                <Typography><b>Client</b></Typography>
+                                    <Grid item xs>
+                                        <TextField label="Nom" type="text" name="name" value={detail.name}/>
+                                    </Grid>
+                                    <Grid item xs>
+                                        <TextField type="text" name="phone" label="Numéro de téléphone" value={detail.phone}/>
+                                    </Grid> 
+                                    <Grid item xs>
+                                        <TextField type="text" name="location" label="Adresse" value={detail.location}/>
+                                    </Grid>
+                                    <Grid item xs>
+                                        <TextField type="text" name="email"  label="Email"value={detail.email}/>
+                                    </Grid>
+                                </Grid>
+                                    <Grid container>
+                                        <Grid item xs={12}>
+                                      <TableContainer>
+                                        <Table>
+                                          <TableHead>
+                                            <TableRow>
+                                              <TableCell>
+                                                <Typography>Désignation</Typography>
+                                              </TableCell>
+                                              <TableCell>
+                                                <Typography>Quantité</Typography>
+                                              </TableCell>
+                                              <TableCell>
+                                                <Typography>Prix</Typography>
+                                              </TableCell>
+                                            </TableRow>
+                                          </TableHead>
+                                          <TableBody>
+                                            <TableRow>
+                                              <TableCell>
+                                              <TextField required type='text' name="type" label="Description"  value={detail.type}/>
+                                              </TableCell>
+                                              <TableCell>
+                                              <TextField  required type='number' name="quantity"   label="Quantité"  value={detail.quantity}/>
+                                              </TableCell>
+                                              <TableCell>
+                                              <TextField required type='number' name="price"   label="Prix" value={detail.price}/>
+                                              </TableCell>
+                                            </TableRow> 
+                                            </TableBody>
+                                        </Table>
+                                        </TableContainer>
+                                        </Grid>
+                                        </Grid>
+                                        <Grid container alignItems='flex-end' direction='column'>
+                                        <Grid item xs={3} >
+                                        <TableContainer>
+                                        <Table>
+                                            <TableHead>
+                                                <TableRow>
+                                                    <TableCell>
+                                                        <Typography>Total</Typography>
+                                                    </TableCell>
+                                                </TableRow>
+                                            </TableHead>
+                                            <TableBody>
+                                                <TableRow>
+                                                    <TableCell>
+                                                  <TextField disabled type="number" name="price"   label="Total" value={detail.total}/>
+                                              </TableCell>
+                                                </TableRow>
+                                            </TableBody>                                         
+                                          </Table>
+                                          </TableContainer>
+                                          </Grid>
+                                          </Grid>
                                          <Grid container>
                                              <Grid item xs>
-                                                 <Button variant='outlined' color='secondary' type='submit'>Ajouter</Button>
+                                                 <Button variant='outlined' color='secondary' type='submit'>Modifier</Button>
                                              </Grid>
                                             <Grid item xs>
                                                 <Button type='button' onClick={setForm}>Fermer</Button>
@@ -392,13 +476,46 @@ console.log(devis.form.newDevis)
                                         </form>
                                         </DialogContent>
                                     </Dialog>
-                
             )
         }        
-        
-    const handleUpdate = (id) => {
-        console.log(devis.form.newDevis[id].name)
-       }
+
+    const facture = (detail) => {
+        console.log(detail.date, detail.name, detail.phone, detail.type, detail.location, detail.email, detail.quantity, detail.price, detail.total, detail.timeremain)
+         const data = {
+            date:detail.date,
+            name: detail.name,
+            phone:detail.phone,
+            type:detail.type,
+            location:detail.location,
+            email:detail.email,
+            quantity:detail.quantity,
+            price:detail.price,
+            total:detail.total,
+         }
+            
+         axios({ 
+            url: '/api/facture',
+            method:'POST',
+            data: data
+            })
+            .then(() => {
+                console.log("data devis vers facture OK")
+            })
+            .catch(() => {
+                console.log("No Data")
+            })
+    }
+       
+    //     }
+    //     axios.put('/api/devis/' + id, data)
+    //     .then((data) => {
+    //         console.log(data)
+    //     })
+    //     .catch((err)=> {
+    //         console.log(err)
+    //     })
+    //     getNewDevis()
+    // }
     
         const classes = useStyles()
     
@@ -406,7 +523,8 @@ console.log(devis.form.newDevis)
 
             <Fragment>
                 {renderDialog(classes)}
-        {renderTable()}
+                
+        {renderTable(devis.form.newDevis)}
             </Fragment>
 
         )

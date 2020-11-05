@@ -1,4 +1,4 @@
-import React, { Fragment, useState } from 'react'
+import React, { Fragment, useEffect, useState } from 'react'
 import AddIcon from '@material-ui/icons/Add';
 import ArrowDownwardIcon from '@material-ui/icons/ArrowDownward';
 import ArrowUpwardIcon from '@material-ui/icons/ArrowUpward';
@@ -9,6 +9,7 @@ import CloseIcon from '@material-ui/icons/Close';
 import MuiDialogTitle from '@material-ui/core/DialogTitle';
 import MuiDialogContent from '@material-ui/core/DialogContent';
 import EqualizerIcon from '@material-ui/icons/Equalizer';
+import axios from 'axios'
 
 
 
@@ -127,43 +128,96 @@ export default function Recettes(){
         })
     }
 
+
+    useEffect(() => {
+        getNewRecetteIn()
+    },[])
+
+    useEffect(() => {
+        getNewRecetteOut()
+    },[])
+
+    const getNewRecetteIn = () => {
+        axios.get('/api/recetteIn')
+        .then((response)=> {
+            const data = response.data
+            setInput({in : {
+                newInput : data
+            }
+        })
+            console.log('data entrée reçu')
+        })
+        .catch(()=> {
+            console.log('data non reçu')
+        })
+    }
+
+    const getNewRecetteOut = () => {
+        axios.get('/api/recetteOut')
+        .then((response)=> {
+            const data = response.data
+            setOutput({out : {
+                newOutput : data
+            }
+        })
+            console.log('data sorties reçu')
+        })
+        .catch(()=> {
+            console.log('data non reçu')
+        })
+    }
 /*Fonction permettant de récupérer les valeurs des entrées après envoie du formulaire et stockage dans un array */
     const handleSubmitIn = (event) => {
         event.preventDefault();
 
-        const {date, from, nature, cost, status} = input.in
+        const {date, from, nature, cost} = input.in
 
-        setInput({
-            in: {
-                  id:"",
-            date:"",
-            from:"",
-            nature:"",
-            cost:"",
-            status:"",
-            newInput:[...input.in.newInput, {id:Math.random(), date, from, nature, cost, status}]
-            }
-        })
+        const data = {
+            date:date,
+            from:from,
+            nature:nature,
+            cost:cost
+        }
 
+        axios({ 
+            url: '/api/recetteIn',
+            method:'POST',
+            data: data
+            })
+            .then(() => {
+                console.log("data entrée")
+                getNewRecetteIn()
+            })
+            .catch(() => {
+                console.log("No Data")
+            })
     }
 
     /*Fonction permettant de récupérer les valeurs des sorties après envoie du formulaire et stockage dans un array */
     const handleSubmitOut = (event) => {
         event.preventDefault();
 
-        const {date, to, nature, cost, status} = output.out
+        const {date, to, nature, cost} = output.out
 
-        setOutput({
-            out: {
-                  id:"",
-            date:"",
-            to:"",
-            nature:"",
-            cost:"",
-            status:"",
-            newOutput:[...output.out.newOutput, {id:Math.random(), date, to, nature, cost, status}]
-            }
-    })
+        const data = {
+            date:date,
+            to:to,
+            nature:nature,
+            cost:cost
+        }
+
+        axios({ 
+            url: '/api/recetteOut',
+            method:'POST',
+            data: data
+            })
+            .then(() => {
+                console.log("data sorties")
+                getNewRecetteOut()
+            })
+            .catch(() => {
+                console.log("No Data")
+            })
     }
 
     // searching = () => {
@@ -285,13 +339,13 @@ export default function Recettes(){
                     </TableHead>{input.in.newInput.map(details => (
                         <TableBody>{openLi ? (
                             <TableRow>
-                                <TableCell>{details.id}</TableCell>
+                                <TableCell>{details._id}</TableCell>
                                 <TableCell>{details.date}</TableCell>
                                 <TableCell>{details.from}</TableCell>
                                 <TableCell>{details.nature}</TableCell>
                                 <TableCell>{details.cost}</TableCell>
                                 <TableCell>{details.status}</TableCell>
-                                <TableCell><Button type='button' onClick={handleDeleteIn.bind(this, details.id)}><DeleteIcon/></Button></TableCell>
+                                <TableCell><Button type='button' onClick={handleDeleteIn.bind(this, details._id)}><DeleteIcon/></Button></TableCell>
                             </TableRow>):(null)}
                         </TableBody>
                         ))}

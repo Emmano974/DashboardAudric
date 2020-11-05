@@ -9,18 +9,18 @@ export default class MonthsCharts extends Component {
     
     render() {
         const data = [
-            {months: 'Jan', uv:'100'},
-            {months: 'Feb', uv:'90'},
-            {months: 'Mar', uv:'100'},
-            {months: 'Apr', uv:'100'},
-            {months: 'May', uv:'100'},
-            {months: 'Jun', uv:'100'},
-            {months: 'Jul', uv:'100'},
-            {months: 'Aug', uv:'100'},
-            {months: 'Sep', uv:'100'},
-            {months: 'Oct', uv:'100'},
-            {months: 'Nov', uv:'100'},
-            {months: 'Dec', uv:'100'},
+            {months: 'Jan', recettes:'100'},
+            {months: 'Feb', recettes:'90'},
+            {months: 'Mar', recettes:'8000'},
+            {months: 'Apr', recettes:'4000'},
+            {months: 'May', recettes:'100'},
+            {months: 'Jun', recettes:'900'},
+            {months: 'Jul', recettes:'5000'},
+            {months: 'Aug', recettes:'1000'},
+            {months: 'Sep', recettes:'100'},
+            {months: 'Oct', recettes:'100'},
+            {months: 'Nov', recettes:'100'},
+            {months: 'Dec', recettes:'100'},
         ]
         return (
             <React.Fragment>
@@ -39,7 +39,7 @@ export default class MonthsCharts extends Component {
                  <XAxis dataKey='months' />
                  <YAxis />
                  <Legend />
-                 <Bar dataKey='uv' />
+                 <Bar dataKey='recettes' />
             </BarChart>
             </React.Fragment>
         )

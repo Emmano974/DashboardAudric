@@ -115,7 +115,7 @@ export default function Factures(){
         const {date ,name,phone,type,location,email,quantity,price} = facture.form
         
         const data = {
-            date:new Date(date),
+            date:new Date(date).getDate() +'/'+ (new Date(date).getMonth()+1) +"/" + new Date(date).getFullYear(),
             name:name,
             phone:phone,
             type:type,

@@ -1,5 +1,5 @@
 import { Box, Button, Dialog, DialogTitle,  List, Grid, IconButton, ListItem, ListItemIcon, ListItemText, makeStyles, MenuItem, Select, TextField, Typography } from '@material-ui/core'
-import React, { useState } from 'react'
+import React, { useEffect, useState } from 'react'
 import FiberManualRecordIcon from '@material-ui/icons/FiberManualRecord';
 import LoopIcon from '@material-ui/icons/Loop';
 import CheckIcon from '@material-ui/icons/Check';
@@ -7,15 +7,14 @@ import ClearIcon from '@material-ui/icons/Clear';
 import AddIcon from '@material-ui/icons/Add';
 import ListIcon from '@material-ui/icons/List';
 import KeyboardArrowDownIcon from '@material-ui/icons/KeyboardArrowDown';
+import axios from 'axios'
 
 
 const useStyles = makeStyles({
     taches: {
-      background: 'linear-gradient(45deg, #FE6B8B 30%, #FF8E53 90%)',
-      color: 'white',
     },
     button : {
-        background: 'red'
+       
     },
     root : {
     },
@@ -45,13 +44,31 @@ export default function Taches() {
   
     const [task, setTask] = useState({
         form: {
-            id:0,
-            tasks:"",
+            name:"",
             time:"",
             status:"",
             newTask:[]
         }
         })
+
+        useEffect(() => {
+            getNewTask()
+            },[])
+    
+            const getNewTask = () => {
+                axios.get('/api/task')
+                .then((response)=> {
+                    const data = response.data
+                    setTask({form : {
+                        newTask : data
+                    }
+                })
+                    console.log('data task reçu')
+                })
+                .catch(()=> {
+                    console.log('data non reçu')
+                })
+            }
 
     const handleChange = (event) => {
         setTask({
@@ -65,19 +82,27 @@ export default function Taches() {
     const handleSubmit = (event) => {
         event.preventDefault();
 
-        const {id, time, tasks, status} = task.form
+        const {name, time, status} = task.form
 
-        setTask({
-            form: {
-                 id:id+1,
-            tasks:"",
-            time:"",
-            status:"",
-            newTask:[...task.form.newTask, {id, time, tasks, status}]
-            }
-           
-        })
-        console.log(event)
+        const data = {
+            name : name,
+            time : time,
+            status : status
+        }
+
+        axios({ 
+            url: '/api/task',
+            method:'POST',
+            data: data
+            })
+            .then(() => {
+                console.log("data task")
+                getNewTask()
+                
+            })
+            .catch(() => {
+                console.log("No Data")
+            })
     }
 
     const renderDialogTask = () => {
@@ -88,7 +113,7 @@ export default function Taches() {
                         <List>
                             <form onSubmit={handleSubmit}>
                             <ListItem>
-                                <TextField type='text' name='tasks' placeholder="Nom de la tâche" value={task.form.tasks} onChange={handleChange}></TextField>
+                                <TextField type='text' name='name' placeholder="Nom de la tâche" value={task.form.name} onChange={handleChange}></TextField>
                             </ListItem>
                             <ListItem>
                                 <TextField type='text' name='time' placeholder="Durée" value={task.form.time} onChange={handleChange}></TextField>
@@ -120,10 +145,6 @@ export default function Taches() {
                             <Typography variant='h6'>Tâches</Typography>
                         </ListItemText>
                     </ListItem>
-                        <ListItem>
-                            
-                                <KeyboardArrowDownIcon/>
-                    </ListItem>
                 </Grid >
                 <Grid item className={classes.button}>
                     <ListItem>
@@ -143,7 +164,8 @@ export default function Taches() {
                 </ListItemIcon> 
                 <ListItemText>
                         {taskes.tasks}
-                        {taskes.time}                
+                        {taskes.time}   
+                        {taskes.status}             
                 </ListItemText>
                     <Select>
                         <MenuItem value={10}><IconButton><LoopIcon/></IconButton></MenuItem>
